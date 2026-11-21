@@ -11,9 +11,11 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: android-actions/setup-android@v3
-      - name: Install SDK 36.1
-        run: sdkmanager "platforms;android-36.1" "build-tools;36.1.0" || sdkmanager "platforms;android-36" "build-tools;36.1.0"
+      - name: Android SDK licenses + platform 36.1
+        run: |
+          SDKM=$(ls -d $ANDROID_HOME/cmdline-tools/*/bin/sdkmanager | sort -V | tail -1)
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-36.1" "build-tools;36.1.0" || "$SDKM" "platforms;android-36" "build-tools;36.0.0"
       - name: Build debug APK
         env:
           PRESAGE_API_KEY: ${{ secrets.PRESAGE_API_KEY }}
