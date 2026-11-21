@@ -17,7 +17,7 @@ for the DEV Presage SmartSpectra SDK Challenge.
 | Pulse rate | Ring beat speed + "Pulse bpm" card |
 | Breathing (chest trace + rate) | Halo size + "Breaths / min" card |
 | HRV (RMSSD) | Ring colour + "Calm" card (Wired / Steady / Calm) |
-| Expressions | Gentle nudge, shown only when an expression holds 8+ s at 60%+ confidence |
+| Expressions | "Nice smile" when a smile holds 2+ s; never comments on other expressions |
 | Validation status | Coaching hint ("Come a little closer") |
 
 ## Setup

@@ -37,11 +37,9 @@ class MoodGate(
 
     private fun nudge(t: ExpressionType): String? = when (t) {
         ExpressionType.HAPPY -> "Nice smile"
-        ExpressionType.SURPRISE -> "Surprised?"
-        ExpressionType.SAD -> "Take a slow breath"
-        ExpressionType.FEAR -> "Take a slow breath"
-        ExpressionType.ANGRY, ExpressionType.CONTEMPT, ExpressionType.DISGUST -> "Soften your face"
-        else -> null // neutral: say nothing
+        // A resting face often reads as angry/contempt/sad, so the app never
+        // comments on those. It only celebrates a real smile.
+        else -> null
     }
 }
 
