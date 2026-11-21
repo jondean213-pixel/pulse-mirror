@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
 }
@@ -9,7 +11,7 @@ val presageApiKey: String = providers.gradleProperty("presageApiKey")
         providers.provider {
             val f = rootProject.file("local.properties")
             if (f.exists()) {
-                java.util.Properties().apply { f.inputStream().use { load(it) } }
+                Properties().apply { f.inputStream().use { load(it) } }
                     .getProperty("presageApiKey", "")
             } else ""
         },
