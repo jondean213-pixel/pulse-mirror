@@ -26,7 +26,6 @@ import com.presagetech.smartspectra.ProcessingStatus
 import com.presagetech.smartspectra.SmartSpectraConfig
 import com.presagetech.smartspectra.SmartSpectraSdk
 import com.presagetech.smartspectra.proto.MetricTypesProto.MetricType
-import com.presagetech.smartspectra.proto.MetricsProto.ExpressionType
 import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
@@ -50,6 +49,8 @@ class MirrorActivity : ComponentActivity() {
 
     private var latestChestTimestamp: Long = Long.MIN_VALUE
     private val session = SessionStats()
+    private val moodGate = MoodGate()
+    private val hintGate = HintGate { code, hint -> friendlyHint(code, hint) }
 
     private val cameraPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission(),
@@ -91,7 +92,7 @@ class MirrorActivity : ComponentActivity() {
         sdk.processingStatus.observe(this) { updateStatus(it) }
         sdk.validationStatus.observe(this) { status ->
             val st = status ?: return@observe
-            hintLabel.text = friendlyHint(st.code.name, st.hint)
+            hintGate.update(st.code.name, st.hint)?.let { hintLabel.text = it }
         }
         sdk.error.observe(this) { error ->
             if (error != null) statusLabel.text = "Error: ${error.message ?: "Unknown"}"
@@ -130,7 +131,7 @@ class MirrorActivity : ComponentActivity() {
             if (metrics.hasFace()) {
                 val top = metrics.face.expressionList.lastOrNull()?.scoresList
                     ?.filter { it.confidence > 0f }?.maxByOrNull { it.confidence }
-                top?.type?.niceName()?.let { moodLabel.text = it }
+                moodLabel.text = moodGate.update(top?.type, top?.confidence ?: 0f)
             }
         }
     }
@@ -141,7 +142,7 @@ class MirrorActivity : ComponentActivity() {
         val preview = PreviewView(this).apply {
             contentDescription = "Your mirror"
             scaleType = PreviewView.ScaleType.FILL_CENTER
-            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+            implementationMode = PreviewView.ImplementationMode.PERFORMANCE
         }
         sdk.config.previewSurfaceProvider = preview.surfaceProvider
         root.addView(preview, FrameLayout.LayoutParams(MATCH, MATCH))
@@ -244,6 +245,8 @@ class MirrorActivity : ComponentActivity() {
     private fun resetUi() {
         latestChestTimestamp = Long.MIN_VALUE
         session.reset()
+        moodGate.reset()
+        hintGate.reset()
         ring.reset()
         pulseLabel.text = "--"; breathLabel.text = "--"; calmLabel.text = "--"
         moodLabel.text = "Pulse reads in ~12 s, breathing ~30 s, calm ~60 s"
@@ -261,17 +264,8 @@ class MirrorActivity : ComponentActivity() {
         "TOO_BRIGHT" -> "Too bright \u2014 try softer light"
         "EXCESSIVE_MOTION" -> "Hold still for a moment"
         "CAMERA_TUNING" -> "Tuning the camera\u2026"
+        "FRAME_RATE_TOO_LOW" -> "Phone is busy \u2014 close other apps for a smoother read"
         else -> sdkHint.ifBlank { code.replace('_', ' ').lowercase() }
-    }
-
-    private fun ExpressionType.niceName(): String? = when (this) {
-        ExpressionType.HAPPY -> "You look happy"
-        ExpressionType.NEUTRAL -> "You look relaxed"
-        ExpressionType.SURPRISE -> "Surprised?"
-        ExpressionType.SAD -> "A little down?"
-        ExpressionType.ANGRY, ExpressionType.CONTEMPT, ExpressionType.DISGUST -> "Unclench your jaw"
-        ExpressionType.FEAR -> "Take a slow breath"
-        else -> null
     }
 
     // ---- tiny view helpers ----
