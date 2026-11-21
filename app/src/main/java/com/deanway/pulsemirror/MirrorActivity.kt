@@ -107,7 +107,7 @@ class MirrorActivity : ComponentActivity() {
                 }
                 metrics.cardio.hrvList.lastOrNull()?.rmssd?.let { rmssd ->
                     if (rmssd > 0) {
-                        val calm = CalmScore.fromRmssd(rmssd)
+                        val calm = CalmScore.fromRmssd(rmssd.toFloat())
                         ring.calm = calm
                         calmLabel.text = CalmScore.label(calm)
                         session.addCalm(calm)
